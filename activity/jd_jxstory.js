@@ -9,17 +9,17 @@
 ============Quantumultx===============
 [task_local]
 #京喜故事
-10 7 * * * https://raw.githubusercontent.com/LXK9301/jd_scripts/master/jd_jxstory.js, tag=京喜故事, enabled=true
+10 7 * * * jd_jxstory.js, tag=京喜故事, enabled=true
 
 ================Loon==============
 [Script]
-cron "10 7 * * *" script-path=https://raw.githubusercontent.com/LXK9301/jd_scripts/master/jd_jxstory.js,tag=京喜故事
+cron "10 7 * * *" script-path=jd_jxstory.js,tag=京喜故事
 
 ===============Surge=================
-京喜故事 = type=cron,cronexp="10 * * * *",wake-system=1,timeout=3600,script-path=https://raw.githubusercontent.com/LXK9301/jd_scripts/master/jd_jxstory.js
+京喜故事 = type=cron,cronexp="10 * * * *",wake-system=1,timeout=3600,script-path=jd_jxstory.js
 
 ============小火箭=========
-京喜故事 = type=cron,script-path=https://raw.githubusercontent.com/LXK9301/jd_scripts/master/jd_jxstory.js, cronexpr="10 * * * *", timeout=3600, enable=true
+京喜故事 = type=cron,script-path=jd_jxstory.js, cronexpr="10 * * * *", timeout=3600, enable=true
 
  */
 
@@ -40,13 +40,7 @@ if ($.isNode()) {
   if (process.env.JD_DEBUG && process.env.JD_DEBUG === 'false') console.log = () => {
   };
 } else {
-  let cookiesData = $.getdata('CookiesJD') || "[]";
-  cookiesData = jsonParse(cookiesData);
-  cookiesArr = cookiesData.map(item => item.cookie);
-  cookiesArr.reverse();
-  cookiesArr.push(...[$.getdata('CookieJD2'), $.getdata('CookieJD')]);
-  cookiesArr.reverse();
-  cookiesArr = cookiesArr.filter(item => item !== "" && item !== null && item !== undefined);
+  cookiesArr = [$.getdata('CookieJD'), $.getdata('CookieJD2'), ...jsonParse($.getdata('CookiesJD') || "[]").map(item => item.cookie)].filter(item => !!item);
 }
 !(async () => {
   await requireConfig();
@@ -57,7 +51,7 @@ if ($.isNode()) {
   for (let i = 0; i < cookiesArr.length; i++) {
     if (cookiesArr[i]) {
       cookie = cookiesArr[i];
-      $.UserName = decodeURIComponent(cookie.match(/pt_pin=(.+?);/) && cookie.match(/pt_pin=(.+?);/)[1])
+      $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
       $.index = i + 1;
       $.isLogin = true;
       $.nickName = '';
@@ -578,7 +572,11 @@ function TotalBean() {
               $.isLogin = false; //cookie过期
               return
             }
-            $.nickName = data['base'].nickname;
+            if (data['retcode'] === 0) {
+              $.nickName = (data['base'] && data['base'].nickname) || $.UserName;
+            } else {
+              $.nickName = $.UserName
+            }
           } else {
             console.log(`京东服务器返回空数据`)
           }

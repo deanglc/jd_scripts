@@ -1,23 +1,23 @@
 /*
 金融打卡领年终奖
 活动时间：2020-12-8 到 2020-12-31
-更新地址：https://raw.githubusercontent.com/LXK9301/jd_scripts/master/jr_sign.js
+更新地址：jr_sign.js
 已支持IOS双京东账号, Node.js支持N个京东账号
 脚本兼容: QuantumultX, Surge, Loon, 小火箭，JSBox, Node.js
 ============Quantumultx===============
 [task_local]
 #金融打卡领年终奖
-10 6 * * * https://raw.githubusercontent.com/LXK9301/jd_scripts/master/jr_sign.js, tag=金融打卡领年终奖, img-url=https://raw.githubusercontent.com/58xinian/icon/master/jd_redPacket.png, enabled=true
+10 6 * * * jr_sign.js, tag=金融打卡领年终奖, img-url=https://raw.githubusercontent.com/58xinian/icon/master/jd_redPacket.png, enabled=true
 
 ================Loon==============
 [Script]
-cron "10 6 * * *" script-path=https://raw.githubusercontent.com/LXK9301/jd_scripts/master/jr_sign.js, tag=金融打卡领年终奖
+cron "10 6 * * *" script-path=jr_sign.js, tag=金融打卡领年终奖
 
 ===============Surge=================
-金融打卡领年终奖 = type=cron,cronexp="10 6 * * *",wake-system=1,timeout=3600,script-path=https://raw.githubusercontent.com/LXK9301/jd_scripts/master/jr_sign.js
+金融打卡领年终奖 = type=cron,cronexp="10 6 * * *",wake-system=1,timeout=3600,script-path=jr_sign.js
 
 ============小火箭=========
-金融打卡领年终奖 = type=cron,script-path=https://raw.githubusercontent.com/LXK9301/jd_scripts/master/jr_sign.js, cronexpr="10 6 * * *", timeout=3600, enable=true
+金融打卡领年终奖 = type=cron,script-path=jr_sign.js, cronexpr="10 6 * * *", timeout=3600, enable=true
  */
 const $ = new Env('金融打卡领年终奖');
 
@@ -33,13 +33,7 @@ if ($.isNode()) {
   if (process.env.JD_DEBUG && process.env.JD_DEBUG === 'false') console.log = () => {
   };
 } else {
-  let cookiesData = $.getdata('CookiesJD') || "[]";
-  cookiesData = jsonParse(cookiesData);
-  cookiesArr = cookiesData.map(item => item.cookie);
-  cookiesArr.reverse();
-  cookiesArr.push(...[$.getdata('CookieJD2'), $.getdata('CookieJD')]);
-  cookiesArr.reverse();
-  cookiesArr = cookiesArr.filter(item => item !== "" && item !== null && item !== undefined);
+  cookiesArr = [$.getdata('CookieJD'), $.getdata('CookieJD2'), ...jsonParse($.getdata('CookiesJD') || "[]").map(item => item.cookie)].filter(item => !!item);
 }
 const JD_API_HOST = 'https://api.m.jd.com/api';
 !(async () => {
@@ -50,7 +44,7 @@ const JD_API_HOST = 'https://api.m.jd.com/api';
   for (let i = 0; i < cookiesArr.length; i++) {
     if (cookiesArr[i]) {
       cookie = cookiesArr[i];
-      $.UserName = decodeURIComponent(cookie.match(/pt_pin=(.+?);/) && cookie.match(/pt_pin=(.+?);/)[1])
+      $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
       $.index = i + 1;
       $.isLogin = true;
       $.nickName = '';
@@ -81,8 +75,8 @@ function showMsg() {
   return new Promise(async resolve => {
     let nowTime = new Date().getTime() + new Date().getTimezoneOffset()*60*1000 + 8*60*60*1000;
     if (nowTime > new Date('2020/12/31 23:59:59+08:00').getTime()) {
-      $.msg($.name, '活动已结束', `咱江湖再见\nhttps://github.com/LXK9301/jd_scripts`, {"open-url": "https://github.com/LXK9301/jd_scripts"});
-      if ($.isNode()) await notify.sendNotify($.name + '活动已结束', `咱江湖再见\n https://github.com/LXK9301/jd_scripts`)
+      $.msg($.name, '活动已结束', `咱江湖再见`);
+      if ($.isNode()) await notify.sendNotify($.name + '活动已结束', `咱江湖再见`)
     } else {
       $.msg($.name, '', `【京东账号${$.index}】${$.nickName}\n${message}`);
     }
@@ -127,7 +121,7 @@ function taskUrl() {
       "Host": "ms.jr.jd.com",
       "Referer": "https://member.jr.jd.com/activities/signin-annual/index.html?channelLv=changjinglouceng&jrcontainer=h5&jrlogin=true",
       "Cookie": cookie,
-      "User-Agent": $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.2.2;14.2;%E4%BA%AC%E4%B8%9C/9.2.2 CFNetwork/1206 Darwin/20.1.0"),
+      "User-Agent": $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.4.4;14.3;network/4g;Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1"),
     }
   }
 }
@@ -144,7 +138,7 @@ function TotalBean() {
         "Connection": "keep-alive",
         "Cookie": cookie,
         "Referer": "https://wqs.jd.com/my/jingdou/my.shtml?sceneval=2",
-        "User-Agent": $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.2.2;14.2;%E4%BA%AC%E4%B8%9C/9.2.2 CFNetwork/1206 Darwin/20.1.0")
+        "User-Agent": $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.4.4;14.3;network/4g;Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1")
       }
     }
     $.post(options, (err, resp, data) => {
@@ -159,7 +153,11 @@ function TotalBean() {
               $.isLogin = false; //cookie过期
               return
             }
-            $.nickName = data['base'].nickname;
+            if (data['retcode'] === 0) {
+              $.nickName = (data['base'] && data['base'].nickname) || $.UserName;
+            } else {
+              $.nickName = $.UserName
+            }
           } else {
             console.log(`京东服务器返回空数据`)
           }
